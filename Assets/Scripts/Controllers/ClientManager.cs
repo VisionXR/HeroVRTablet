@@ -24,12 +24,12 @@ public class ClientManager : MonoBehaviour
     private Thread receiveThread;
     public bool isRunning;
 
-
+    public ConnectionPanel connectionPanel;
     private bool isMessageReceived = false;
     private string receivedMessage = string.Empty;
     private void OnEnable()
     {
-        ConnectToServer(socketData.serverIP, socketData.serverPort);
+       // ConnectToServer(socketData.serverIP, socketData.serverPort);
         socketData.SendDataToServerEvent += SendData;
     }
 
@@ -61,11 +61,13 @@ public class ClientManager : MonoBehaviour
             receiveThread.IsBackground = true;
             receiveThread.Start();
 
+            connectionPanel.UpdateConnectionStatus("Connected");
             Debug.Log($"[SocketManager] TCP Connected to {ip}:{port}");
         }
         catch (System.Exception ex)
         {
             Debug.LogError($"[SocketManager] TCP Connection failed: {ex.Message}");
+            connectionPanel.UpdateConnectionStatus("Not Connected");
         }
     }
 

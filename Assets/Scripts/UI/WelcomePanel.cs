@@ -23,16 +23,16 @@ public class WelcomePanel : MonoBehaviour
         isActive = false;
     }
 
-    void Update()
-    {
-        if (!isActive) return;
+    //void Update()
+    //{
+    //    if (!isActive) return;
 
-        // For mouse click or screen tap
-        if (Input.GetMouseButtonDown(0) || Input.touchCount > 0)
-        {
-            StartBtnClicked();
-        }
-    }
+    //    // For mouse click or screen tap
+    //    if (Input.GetMouseButtonDown(0) || Input.touchCount > 0)
+    //    {
+    //        StartBtnClicked();
+    //    }
+    //}
 
     public void StartBtnClicked()
     {
