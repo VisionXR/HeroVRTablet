@@ -12,18 +12,27 @@ public class SubmitScreen : MonoBehaviour
     public TMP_Text nameText;
     public TMP_Text emailText;
     public PlayerInfo playerInfo;
+
+    [Header("GameObjects")]
     public GameObject nextPanel;
+    public GameObject previousPanel;
 
     void OnEnable()
     {
         nameText.text = "Name : "+uiData.playerName;
         emailText.text = "Email : "+uiData.playerEmail;
 
-      
-
+     
     }
 
-   
+    public void OnPreviousButtonClick()
+    {
+        previousPanel.SetActive(true);
+        gameObject.SetActive(false);
+    }
+
+
+
     public void StartRideBtnClicked()
     {
          Debug.Log("Ride Started for " + uiData.playerName + " in " + uiData.selectedCity);
@@ -41,6 +50,9 @@ public class SubmitScreen : MonoBehaviour
         data.jsonData = playerDataJson;
 
         socketData.SendDataToServer(JsonUtility.ToJson(data));
+
+
+        uiData.GenerateAIImage();
         // Implement ride starting logic here
 
         nextPanel.SetActive(true);

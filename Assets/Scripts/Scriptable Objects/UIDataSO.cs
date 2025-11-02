@@ -11,6 +11,9 @@ public class UIDataSO : ScriptableObject
     public Gender selectedGender;
     public City selectedCity;
     public Language selectedLanguage;
+    public Texture2D playerImage;
+    public Texture2D aiGeneratedImage;
+    public Texture2D qrImage;
 
     public int playerScore;
     public int playerCount;
@@ -21,13 +24,26 @@ public class UIDataSO : ScriptableObject
     //Actions
 
     public Action ShowScorePanelEvent;
+    public Action<Texture2D, int> GenerateAIImageEvent;
+    public int id = 1;
 
 
     //Methods
 
+    void OnEnable()
+    {
+            
+    }
+
     public void ShowScorePanel()
     {
         ShowScorePanelEvent?.Invoke();
+    }
+
+    public void GenerateAIImage()
+    {
+        
+        GenerateAIImageEvent?.Invoke(playerImage, ((int)selectedCity+1));
     }
 }
 

@@ -24,32 +24,33 @@ public class ClientManager : MonoBehaviour
     private Thread receiveThread;
     public bool isRunning;
 
-    public ConnectionPanel connectionPanel;
+
     private bool isMessageReceived = false;
     private string receivedMessage = string.Empty;
     private void OnEnable()
     {
-       // ConnectToServer(socketData.serverIP, socketData.serverPort);
+        socketData.ConnectToServerEvent += ConnectToServer; 
         socketData.SendDataToServerEvent += SendData;
     }
 
     private void OnDisable()
     {
         Disconnect();
+        socketData.ConnectToServerEvent -= ConnectToServer;
         socketData.SendDataToServerEvent -= SendData;
     }
 
     /// <summary>
     /// Connect to the server using TCP at given IP and port.
     /// </summary>
-    public void ConnectToServer(string ip, int port)
+    public void ConnectToServer()
     {
         if (isRunning) return;
 
         try
         {
             tcpClient = new TcpClient();
-            tcpClient.Connect(ip, port);
+            tcpClient.Connect(socketData.serverIP, socketData.serverPort);
             networkStream = tcpClient.GetStream();
             reader = new StreamReader(networkStream, Encoding.UTF8);
             writer = new StreamWriter(networkStream, Encoding.UTF8) { AutoFlush = true };
@@ -61,13 +62,12 @@ public class ClientManager : MonoBehaviour
             receiveThread.IsBackground = true;
             receiveThread.Start();
 
-            connectionPanel.UpdateConnectionStatus("Connected");
-            Debug.Log($"[SocketManager] TCP Connected to {ip}:{port}");
+            socketData.SetConnectionStatus("Connected");
+
         }
         catch (System.Exception ex)
         {
-            Debug.LogError($"[SocketManager] TCP Connection failed: {ex.Message}");
-            connectionPanel.UpdateConnectionStatus("Not Connected");
+            socketData.SetConnectionStatus("Not Connected");
         }
     }
 
@@ -102,6 +102,7 @@ public class ClientManager : MonoBehaviour
         if (!isRunning || tcpClient == null || !tcpClient.Connected)
         {
             Debug.Log("[SocketManager] Cannot send data. Not connected.");
+            socketData.SetConnectionStatus("Not Connected");
             return;
         }
 
@@ -128,16 +129,17 @@ public class ClientManager : MonoBehaviour
                 string message = reader.ReadLine();
                 if (!string.IsNullOrEmpty(message))
                 {
-                    // Handle the received message as needed
                     Debug.Log($"[SocketManager] Received: {message}");
                     receivedMessage = message;
                     isMessageReceived = true;
-                    
                 }
             }
             catch (System.Exception ex)
             {
                 Debug.LogError($"[SocketManager] Receive failed: {ex.Message}");
+                socketData.SetConnectionStatus("Not Connected");
+                isRunning = false;
+                Disconnect();
                 break;
             }
         }
@@ -146,11 +148,23 @@ public class ClientManager : MonoBehaviour
 
     private void Update()
     {
+        if (tcpClient != null && isRunning && !tcpClient.Connected)
+        {
+            socketData.SetConnectionStatus("Not Connected");
+            isRunning = false;
+        }
+
         if (isMessageReceived)
         {
             isMessageReceived = false;
-            uiData.ShowScorePanel();
-            // Process the received message on the main thread if needed
+            PacketData packet = JsonUtility.FromJson<PacketData>(receivedMessage);
+            if(packet.eventCode == EventCode.ScoreUpdate)
+            {
+                int newScore = int.Parse(packet.jsonData);
+                uiData.playerScore = newScore;
+                uiData.ShowScorePanel();
+            }
+
         }
     }
 }

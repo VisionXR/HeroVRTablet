@@ -9,17 +9,13 @@ public class ScorePanel : MonoBehaviour
 
     [Header("UI Elements")]
     public TMP_Text scoreText;
-    public Image qrCodeImage;
-    public Image aiGeneratedImage;
     public GameObject nextPanel;
 
 
     void OnEnable()
     {
         scoreText.text = "Score : " + uiData.playerScore.ToString();
-        // Assuming uiData.qrCodeSprite and uiData.aiGeneratedSprite are of type Sprite
-        qrCodeImage.sprite = uiData.qrCodeSprite;
-        aiGeneratedImage.sprite = uiData.aiGeneratedSprite;
+        
     }
 
 

@@ -11,10 +11,11 @@ public class SocketDataSO : ScriptableObject
 
 
     //Actions
-    public Action<string, int> ConnectToServerEvent;
+    public Action ConnectToServerEvent;
     public Action DisconnectEvent;
     public Action<int> StartServerEvent;
     public Action StopServerEvent;
+    public Action<string> ConnectionStatusChangedEvent;
 
     public Action<string> SendDataToServerEvent;
 
@@ -22,7 +23,7 @@ public class SocketDataSO : ScriptableObject
     //Methods
     public void ConnectToServer()
     {
-        ConnectToServerEvent?.Invoke(serverIP, serverPort);
+        ConnectToServerEvent?.Invoke();
     }
 
     public void Disconnect()
@@ -47,4 +48,9 @@ public class SocketDataSO : ScriptableObject
         SendDataToServerEvent?.Invoke(message);
     }
 
+
+    public void SetConnectionStatus(string status)
+    {
+        ConnectionStatusChangedEvent?.Invoke(status);
+    }
 }

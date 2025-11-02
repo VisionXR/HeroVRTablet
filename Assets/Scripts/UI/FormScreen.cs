@@ -13,20 +13,28 @@ public class FormScreen : MonoBehaviour
     [SerializeField] private TMP_InputField emailInputField;
     [SerializeField] private TMP_Dropdown genderDropdown;
 
-    [Header("Cam Elements")]
+    [Header("Game Objects")]
+    public GameObject nextPanel;
+    public GameObject previousPanel;
     public GameObject camPanel;
     public GameObject capturePanel;
+    public GameObject camBtn;
+
+    [Header("Cam Elements")]
+    [SerializeField] private RawImage camBorder;
     [SerializeField] private RawImage cameraPreview;
     [SerializeField] private RawImage capturePreview;
-    [SerializeField] private RawImage submittedPreview;
-    public GameObject camBtn;
+    [SerializeField] private RawImage submittedPreview; 
     [SerializeField] private TMP_Text countdownText;
     private WebCamTexture webCamTexture;
 
-    public GameObject nextPanel;
+   
 
-    // Store the captured image for later use
-    public Texture2D capturedImage { get; private set; }
+    public void OnPreviousButtonClick()
+    {
+        previousPanel.SetActive(true);
+        gameObject.SetActive(false);
+    }
 
     public void OnNextButtonClick()
     {
@@ -37,7 +45,6 @@ public class FormScreen : MonoBehaviour
         uiData.playerEmail = email;
         uiData.selectedGender = (Gender)genderDropdown.value;
 
-        Debug.Log($"Name: {name}, Email: {email}, Gender: {gender}");
 
         nextPanel.SetActive(true);
         gameObject.SetActive(false);
@@ -48,10 +55,33 @@ public class FormScreen : MonoBehaviour
         if (webCamTexture == null)
         {
             camPanel.SetActive(true);
-            webCamTexture = new WebCamTexture();
+
+            // Select back camera if available
+            string backCamName = null;
+            foreach (var device in WebCamTexture.devices)
+            {
+                if (!device.isFrontFacing)
+                {
+                    backCamName = device.name;
+                    break;
+                }
+            }
+            if (backCamName == null && WebCamTexture.devices.Length > 0)
+                backCamName = WebCamTexture.devices[0].name;
+
+            webCamTexture = new WebCamTexture(backCamName);
             webCamTexture.Play();
             cameraPreview.texture = webCamTexture;
-            cameraPreview.uvRect = new Rect(1, 0, -1, 1); // <-- Add this line
+
+            // Flip only if front camera or desktop
+            bool shouldFlip = false;
+#if UNITY_ANDROID
+            shouldFlip = (backCamName == null || WebCamTexture.devices.Length == 0 || WebCamTexture.devices[0].isFrontFacing);
+#else
+        shouldFlip = true; // desktop/webcam
+#endif
+            cameraPreview.uvRect = shouldFlip ? new Rect(1, 0, -1, 1) : new Rect(0, 0, 1, 1);
+
             Debug.Log("Webcam started.");
         }
         else if (!webCamTexture.isPlaying)
@@ -59,12 +89,19 @@ public class FormScreen : MonoBehaviour
             camPanel.SetActive(true);
             webCamTexture.Play();
             cameraPreview.texture = webCamTexture;
-            cameraPreview.uvRect = new Rect(1, 0, -1, 1); // <-- Add this line
         }
         else
         {
             webCamTexture.Stop();
             camPanel.SetActive(false);
+        }
+    }
+
+    void Update()
+    {
+        if (webCamTexture != null && webCamTexture.isPlaying)
+        {
+            camBorder.rectTransform.localEulerAngles = new Vector3(0, 0, -webCamTexture.videoRotationAngle);
         }
     }
 
@@ -91,7 +128,7 @@ public class FormScreen : MonoBehaviour
         if (webCamTexture != null && webCamTexture.isPlaying)
         {
             // Capture and mirror the image horizontally
-            capturedImage = new Texture2D(webCamTexture.width, webCamTexture.height, TextureFormat.RGB24, false);
+            uiData.playerImage = new Texture2D(webCamTexture.width, webCamTexture.height, TextureFormat.RGB24, false);
             Color[] pixels = webCamTexture.GetPixels();
             int width = webCamTexture.width;
             int height = webCamTexture.height;
@@ -105,20 +142,20 @@ public class FormScreen : MonoBehaviour
                 }
             }
 
-            capturedImage.SetPixels(mirroredPixels);
-            capturedImage.Apply();
+            uiData.playerImage.SetPixels(mirroredPixels);
+            uiData.playerImage.Apply();
 
             CloseCamera();
             capturePanel.SetActive(true);
-            capturePreview.texture = capturedImage;
+            capturePreview.texture = uiData.playerImage;
         }
     }
 
     public void SubmitButtonClicked()
     {
         capturePanel.SetActive(false);
-        submittedPreview.texture = capturedImage;
-       // camBtn.SetActive(false);
+        submittedPreview.texture = uiData.playerImage;   
+         camBtn.SetActive(false);
     }
 
     public void RetakeBtnClicked()

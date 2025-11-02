@@ -14,6 +14,7 @@ public class CitySelectionScreen : MonoBehaviour
 
     [Header(" GameObjects")]
     public GameObject nextPanel;
+    public GameObject previousPanel;
 
     // local
 
@@ -21,6 +22,12 @@ public class CitySelectionScreen : MonoBehaviour
     {
         ResetBg();
         DelhiBtnClicked();
+    }
+
+    public void OnPreviousButtonClick()
+    {
+        previousPanel.SetActive(true);
+        gameObject.SetActive(false);
     }
 
 

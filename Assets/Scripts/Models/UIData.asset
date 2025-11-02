@@ -12,3 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 509aaebb752478b44937216210ca9e16, type: 3}
   m_Name: UIData
   m_EditorClassIdentifier: 
+  playerName: Vikram
+  playerEmail: teja@123
+  selectedGender: 0
+  selectedCity: 2
+  selectedLanguage: 0
+  playerImage: {fileID: 0}
+  aiGeneratedImage: {fileID: 0}
+  qrImage: {fileID: 0}
+  playerScore: 0
+  playerCount: 0
+  qrCodeSprite: {fileID: 0}
+  aiGeneratedSprite: {fileID: 0}
+  id: 1
