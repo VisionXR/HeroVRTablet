@@ -6,6 +6,7 @@ public class WelcomePanel : MonoBehaviour
 {
     [Header(" Scriptable Object")]
     public SocketDataSO socketData; // Your scriptable object holding IP/port config
+    public UIDataSO uiData;
 
     [Header(" UI Panels")]
     public GameObject NextPanel;
@@ -20,6 +21,8 @@ public class WelcomePanel : MonoBehaviour
 
     void OnEnable()
     {
+        uiData.aiGeneratedImage = null;
+        uiData.playerImage = null;
         isActive = true;
         socketData.ConnectionStatusChangedEvent += ConnectionStatusChanges;
     }

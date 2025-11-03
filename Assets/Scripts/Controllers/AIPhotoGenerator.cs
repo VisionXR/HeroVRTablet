@@ -38,11 +38,13 @@ public class AIPhotoGenerator : MonoBehaviour
     private void OnEnable()
     {
         uiData.GenerateAIImageEvent += UploadTexture;
+        uiData.GenerateQRCodeEvent += GenerateDefaultQR;
     }
 
     private void OnDisable()
     {
         uiData.GenerateAIImageEvent -= UploadTexture;
+        uiData.GenerateQRCodeEvent -= GenerateDefaultQR;
     }
 
     /// <summary>
@@ -52,6 +54,7 @@ public class AIPhotoGenerator : MonoBehaviour
     /// <param name="imageId">The ID to send along with the image.</param>
     public void UploadTexture(Texture2D texture, int imageId)
     {
+        Debug.Log(" uploading" + imageId);
         StartCoroutine(UploadImageCoroutine(texture, imageId));
     }
 
@@ -154,6 +157,21 @@ public class AIPhotoGenerator : MonoBehaviour
         uiData.qrImage = finalTexture;
         aiImageDisplay.texture = finalTexture;
         UploadForQR(finalTexture, ((int)uiData.selectedCity+1));
+    }
+
+
+    private void GenerateDefaultQR()
+    {
+        if (uiData.playerName != "")
+        {
+            nameText.text = uiData.playerName;
+        }
+        else
+        {
+            nameText.text = "Guest User";
+        }
+
+        StartCoroutine(WaitAndGetFinalImage());
     }
 
     /// <summary>

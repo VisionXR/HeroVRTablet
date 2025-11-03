@@ -1,5 +1,8 @@
+using NUnit.Framework;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class SubmitScreen : MonoBehaviour
 {
@@ -9,6 +12,8 @@ public class SubmitScreen : MonoBehaviour
     public SocketDataSO socketData;
 
     [Header("UI Elements")]
+    public List<Sprite> defaultImages;
+    public RawImage aIImage;
     public TMP_Text nameText;
     public TMP_Text emailText;
     public PlayerInfo playerInfo;
@@ -52,10 +57,20 @@ public class SubmitScreen : MonoBehaviour
         socketData.SendDataToServer(JsonUtility.ToJson(data));
 
 
-        uiData.GenerateAIImage();
-        // Implement ride starting logic here
+        if(uiData.playerImage != null)
+        {
+            uiData.GenerateAIImage();
+        }
+        else
+        {
+            aIImage.texture = defaultImages[(int)uiData.selectedCity].texture;
+            uiData.GenerateQRCode();
+        }
 
-        nextPanel.SetActive(true);
-        gameObject.SetActive(false);
+
+            // Implement ride starting logic here
+
+          nextPanel.SetActive(true);
+          gameObject.SetActive(false);
     }
 }

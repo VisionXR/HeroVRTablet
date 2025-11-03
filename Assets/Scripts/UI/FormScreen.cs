@@ -28,10 +28,26 @@ public class FormScreen : MonoBehaviour
     [SerializeField] private TMP_Text countdownText;
     private WebCamTexture webCamTexture;
 
-   
 
+    private void OnEnable()
+    {
+        uiData.aiGeneratedImage = null;
+        uiData.playerImage = null;
+        submittedPreview.texture = null;
+    }
+
+    private void OnDisable()
+    {
+        submittedPreview.texture = null;
+        camBtn.SetActive(true);
+        camPanel.SetActive(false);
+        capturePanel.SetActive(false);
+
+    }
     public void OnPreviousButtonClick()
     {
+        submittedPreview.texture = null;
+        camBtn.SetActive(true);
         previousPanel.SetActive(true);
         gameObject.SetActive(false);
     }
@@ -56,33 +72,40 @@ public class FormScreen : MonoBehaviour
         {
             camPanel.SetActive(true);
 
-            // Select back camera if available
+            // Always select the back camera if available
             string backCamName = null;
             foreach (var device in WebCamTexture.devices)
             {
+#if UNITY_ANDROID
                 if (!device.isFrontFacing)
                 {
                     backCamName = device.name;
                     break;
                 }
+#else
+            // On non-Android, just use the first camera
+            backCamName = device.name;
+            break;
+#endif
             }
             if (backCamName == null && WebCamTexture.devices.Length > 0)
                 backCamName = WebCamTexture.devices[0].name;
 
-            webCamTexture = new WebCamTexture(backCamName);
+            // Get the width and height from the cameraPreview RectTransform
+            int camWidth = Mathf.RoundToInt(cameraPreview.rectTransform.rect.width);
+            int camHeight = Mathf.RoundToInt(cameraPreview.rectTransform.rect.height);
+
+            webCamTexture = new WebCamTexture(backCamName, camWidth, camHeight);
             webCamTexture.Play();
             cameraPreview.texture = webCamTexture;
 
-            // Flip only if front camera or desktop
-            bool shouldFlip = false;
-#if UNITY_ANDROID
-            shouldFlip = (backCamName == null || WebCamTexture.devices.Length == 0 || WebCamTexture.devices[0].isFrontFacing);
-#else
-        shouldFlip = true; // desktop/webcam
-#endif
-            cameraPreview.uvRect = shouldFlip ? new Rect(1, 0, -1, 1) : new Rect(0, 0, 1, 1);
+            // No flipping for back camera
+            cameraPreview.uvRect = new Rect(0, 0, 1, 1);
 
-            Debug.Log("Webcam started.");
+            // Always rotate preview -90 degrees
+            cameraPreview.rectTransform.localEulerAngles = new Vector3(0, 0, -90);
+
+            Debug.Log("Webcam started: " + backCamName);
         }
         else if (!webCamTexture.isPlaying)
         {
@@ -97,13 +120,14 @@ public class FormScreen : MonoBehaviour
         }
     }
 
-    void Update()
-    {
-        if (webCamTexture != null && webCamTexture.isPlaying)
-        {
-            camBorder.rectTransform.localEulerAngles = new Vector3(0, 0, -webCamTexture.videoRotationAngle);
-        }
-    }
+
+    //void Update()
+    //{
+    //    if (webCamTexture != null && webCamTexture.isPlaying)
+    //    {
+    //        camBorder.rectTransform.localEulerAngles = new Vector3(0, 0, -webCamTexture.videoRotationAngle);
+    //    }
+    //}
 
     public void CaptureBtnClicked()
     {
@@ -127,23 +151,24 @@ public class FormScreen : MonoBehaviour
 
         if (webCamTexture != null && webCamTexture.isPlaying)
         {
-            // Capture and mirror the image horizontally
-            uiData.playerImage = new Texture2D(webCamTexture.width, webCamTexture.height, TextureFormat.RGB24, false);
-            Color[] pixels = webCamTexture.GetPixels();
             int width = webCamTexture.width;
             int height = webCamTexture.height;
-            Color[] mirroredPixels = new Color[pixels.Length];
+            Color[] pixels = webCamTexture.GetPixels();
 
+            // No mirroring or rotation, just swap width and height to match preview
+            Texture2D captured = new Texture2D(height, width, TextureFormat.RGB24, false);
+
+            // Copy pixels with 90-degree rotation (to match preview)
             for (int y = 0; y < height; y++)
             {
                 for (int x = 0; x < width; x++)
                 {
-                    mirroredPixels[y * width + x] = pixels[y * width + (width - 1 - x)];
+                    captured.SetPixel(y, width - x - 1, pixels[y * width + x]);
                 }
             }
+            captured.Apply();
 
-            uiData.playerImage.SetPixels(mirroredPixels);
-            uiData.playerImage.Apply();
+            uiData.playerImage = captured;
 
             CloseCamera();
             capturePanel.SetActive(true);
@@ -155,7 +180,7 @@ public class FormScreen : MonoBehaviour
     {
         capturePanel.SetActive(false);
         submittedPreview.texture = uiData.playerImage;   
-         camBtn.SetActive(false);
+        camBtn.SetActive(false);
     }
 
     public void RetakeBtnClicked()

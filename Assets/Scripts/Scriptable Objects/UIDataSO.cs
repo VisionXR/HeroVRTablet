@@ -25,6 +25,7 @@ public class UIDataSO : ScriptableObject
 
     public Action ShowScorePanelEvent;
     public Action<Texture2D, int> GenerateAIImageEvent;
+    public Action GenerateQRCodeEvent;
     public int id = 1;
 
 
@@ -44,6 +45,11 @@ public class UIDataSO : ScriptableObject
     {
         
         GenerateAIImageEvent?.Invoke(playerImage, ((int)selectedCity+1));
+    }
+
+    public void GenerateQRCode()
+    {
+        GenerateQRCodeEvent?.Invoke();
     }
 }
 
